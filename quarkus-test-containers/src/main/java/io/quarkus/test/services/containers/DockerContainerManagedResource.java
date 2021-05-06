@@ -38,8 +38,8 @@ public abstract class DockerContainerManagedResource implements ManagedResource 
 
         innerContainer = initContainer();
 
-        Map<String, String> properties = resolveProperties();
-        innerContainer.withEnv(properties);
+        initProperties();
+        initResources();
 
         innerContainer.start();
 
@@ -81,7 +81,7 @@ public abstract class DockerContainerManagedResource implements ManagedResource 
         return innerContainer.getMappedPort(port);
     }
 
-    private Map<String, String> resolveProperties() {
+    private void initProperties() {
         Map<String, String> properties = new HashMap<>();
         for (Entry<String, String> entry : context.getOwner().getProperties().entrySet()) {
             String value = entry.getValue();
@@ -92,7 +92,14 @@ public abstract class DockerContainerManagedResource implements ManagedResource 
 
             properties.put(entry.getKey(), value);
         }
-        return properties;
+
+        innerContainer.withEnv(properties);
+    }
+
+    private void initResources() {
+        for (Entry<String, String> entry : context.getOwner().getResources().entrySet()) {
+            innerContainer.withClasspathResourceMapping(entry.getKey(), entry.getValue(), BindMode.READ_ONLY);
+        }
     }
 
     private boolean isResource(String key) {

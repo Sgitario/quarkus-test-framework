@@ -12,6 +12,8 @@ public interface Service {
 
     Map<String, String> getProperties();
 
+    Map<String, String> getResources();
+
     void register(String name);
 
     void init(ManagedResourceBuilder resource, ServiceContext serviceContext);
@@ -21,4 +23,6 @@ public interface Service {
     void stop();
 
     Service withProperty(String key, String value);
+
+    Service withResource(String resource, String to);
 }

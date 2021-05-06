@@ -25,6 +25,7 @@ public class BaseService<T extends Service> implements Service {
     private final List<Action> onPreStartActions = new LinkedList<>();
     private final List<Action> onPostStartActions = new LinkedList<>();
     private final Map<String, String> properties = new HashMap<>();
+    private final Map<String, String> resources = new HashMap<>();
     private final List<Runnable> futureProperties = new LinkedList<>();
 
     private ManagedResource managedResource;
@@ -32,14 +33,36 @@ public class BaseService<T extends Service> implements Service {
     private Configuration configuration;
     private ServiceContext context;
 
-    @Override
     public String getName() {
         return serviceName;
     }
 
-    @Override
     public Configuration getConfiguration() {
         return configuration;
+    }
+
+    public String getHost() {
+        return getHost(Protocol.HTTP);
+    }
+
+    public String getHost(Protocol protocol) {
+        return managedResource.getHost(protocol);
+    }
+
+    public Integer getPort() {
+        return getPort(Protocol.HTTP);
+    }
+
+    public Integer getPort(Protocol protocol) {
+        return managedResource.getPort(protocol);
+    }
+
+    public Map<String, String> getProperties() {
+        return Collections.unmodifiableMap(properties);
+    }
+
+    public Map<String, String> getResources() {
+        return Collections.unmodifiableMap(resources);
     }
 
     public T onPreStart(Action action) {
@@ -63,10 +86,17 @@ public class BaseService<T extends Service> implements Service {
     }
 
     /**
+     * Map the resource to the target service.
+     */
+    public T withResource(String resource, String to) {
+        resources.put(resource, to);
+        return (T) this;
+    }
+
+    /**
      * The runtime configuration property to be used if the built artifact is
      * configured to be run.
      */
-    @Override
     public T withProperty(String key, String value) {
         this.properties.put(key, value);
         return (T) this;
@@ -79,27 +109,6 @@ public class BaseService<T extends Service> implements Service {
     public T withProperty(String key, Supplier<String> value) {
         futureProperties.add(() -> properties.put(key, value.get()));
         return (T) this;
-    }
-
-    public String getHost() {
-        return getHost(Protocol.HTTP);
-    }
-
-    public String getHost(Protocol protocol) {
-        return managedResource.getHost(protocol);
-    }
-
-    public Integer getPort() {
-        return getPort(Protocol.HTTP);
-    }
-
-    public Integer getPort(Protocol protocol) {
-        return managedResource.getPort(protocol);
-    }
-
-    @Override
-    public Map<String, String> getProperties() {
-        return Collections.unmodifiableMap(properties);
     }
 
     /**
