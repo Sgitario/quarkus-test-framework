@@ -92,7 +92,8 @@ public final class OpenShiftClient {
      */
     public void apply(Service service, Path file) {
         try {
-            new Command(OC, "apply", "-f", file.toAbsolutePath().toString(), "-n", currentNamespace).runAndWait();
+            ocCommand().arguments("apply", "-f", file.toAbsolutePath().toString(), "-n", currentNamespace).lockAccess()
+                    .runAndWait();
         } catch (Exception e) {
             fail("Failed to apply resource " + file.toAbsolutePath().toString() + " for " + service.getName() + " . Caused by "
                     + e.getMessage());
@@ -135,7 +136,7 @@ public final class OpenShiftClient {
      */
     public void rollout(Service service) {
         try {
-            new Command(OC, "rollout", "latest", "dc/" + service.getName(), "-n", currentNamespace).runAndWait();
+            ocCommand().arguments("rollout", "latest", "dc/" + service.getName(), "-n", currentNamespace).runAndWait();
         } catch (Exception e) {
             fail("Deployment failed to be started. Caused by " + e.getMessage());
         }
@@ -165,7 +166,7 @@ public final class OpenShiftClient {
         }
 
         try {
-            new Command(OC, "expose", "svc/" + serviceName, "--port=" + port, "-n", currentNamespace).runAndWait();
+            ocCommand().arguments("expose", "svc/" + serviceName, "--port=" + port, "-n", currentNamespace).runAndWait();
         } catch (Exception e) {
             fail("Service failed to be exposed. Caused by " + e.getMessage());
         }
@@ -183,7 +184,8 @@ public final class OpenShiftClient {
         }
 
         try {
-            new Command(OC, "scale", "dc/" + service.getName(), "--replicas=" + replicas, "-n", currentNamespace).runAndWait();
+            ocCommand().arguments("scale", "dc/" + service.getName(), "--replicas=" + replicas, "-n", currentNamespace)
+                    .runAndWait();
         } catch (Exception e) {
             fail("Service failed to be scaled. Caused by " + e.getMessage());
         }
@@ -333,12 +335,16 @@ public final class OpenShiftClient {
      */
     public void deleteProject() {
         try {
-            new Command(OC, "delete", "project", client.getNamespace()).runAndWait();
+            ocCommand().arguments("delete", "project", client.getNamespace()).runAndWait();
         } catch (Exception e) {
             fail("Project failed to be deleted. Caused by " + e.getMessage());
         } finally {
             masterClient.close();
         }
+    }
+
+    private Command ocCommand() {
+        return new Command(OC).lockAccess();
     }
 
     private String enrichTemplate(Service service, String template) {
@@ -465,7 +471,7 @@ public final class OpenShiftClient {
     private boolean doCreateProject(String projectName) {
         boolean created = false;
         try {
-            new Command(OC, "new-project", projectName).runAndWait();
+            ocCommand().arguments("new-project", projectName).runAndWait();
             created = true;
         } catch (Exception e) {
             Log.warn("Project " + projectName + " failed to be created. Caused by: " + e.getMessage() + ". Trying again.");

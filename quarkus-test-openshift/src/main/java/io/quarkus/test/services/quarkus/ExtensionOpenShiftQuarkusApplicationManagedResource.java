@@ -101,7 +101,7 @@ public class ExtensionOpenShiftQuarkusApplicationManagedResource extends OpenShi
         String namespace = client.project();
 
         List<String> args = new ArrayList<>(
-                Arrays.asList(MVN_COMMAND, USING_EXTENSION_PROFILE, BATCH_MODE, DISPLAY_VERSION, PACKAGE_GOAL,
+                Arrays.asList(USING_EXTENSION_PROFILE, BATCH_MODE, DISPLAY_VERSION, PACKAGE_GOAL,
                         QUARKUS_PLUGIN_DEPLOY, QUARKUS_PLUGIN_EXPOSE, SKIP_TESTS, SKIP_ITS, SKIP_CHECKSTYLE));
         args.add(withContainerName());
         args.add(withKubernetesClientNamespace(namespace));
@@ -115,7 +115,7 @@ public class ExtensionOpenShiftQuarkusApplicationManagedResource extends OpenShi
         withAdditionalArguments(args);
 
         try {
-            new Command(args).onDirectory(model.getContext().getServiceFolder()).runAndWait();
+            new Command(MVN_COMMAND).arguments(args).onDirectory(model.getContext().getServiceFolder()).runAndWait();
         } catch (Exception e) {
             fail("Failed to run maven command. Caused by " + e.getMessage());
         }

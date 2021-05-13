@@ -56,7 +56,9 @@ public class BuildOpenShiftQuarkusApplicationManagedResource extends OpenShiftQu
         }
 
         try {
-            new Command("oc", "start-build", model.getContext().getName(), fromArg, "--follow").runAndWait();
+            new Command("oc").lockAccess()
+                    .arguments("start-build", model.getContext().getName(), fromArg, "--follow")
+                    .runAndWait();
         } catch (Exception e) {
             fail("Failed when starting build. Caused by " + e.getMessage());
         }

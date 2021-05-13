@@ -81,7 +81,7 @@ public final class KubectlClient {
      */
     public void apply(Service service, Path file) {
         try {
-            new Command(KUBECTL, "apply", "-f", file.toAbsolutePath().toString(), "-n", currentNamespace)
+            kubectlCommand().arguments("apply", "-f", file.toAbsolutePath().toString(), "-n", currentNamespace)
                     .runAndWait();
         } catch (Exception e) {
             fail("Failed to apply resource " + file.toAbsolutePath().toString() + " for " + service.getName() + ". Caused by "
@@ -109,8 +109,10 @@ public final class KubectlClient {
      */
     public void expose(Service service, Integer port) {
         try {
-            new Command(KUBECTL, "expose", "deployment", service.getName(), "--port=" + port, "--name=" + service.getName(),
-                    "--type=LoadBalancer", "-n", currentNamespace).runAndWait();
+            kubectlCommand()
+                    .arguments("expose", "deployment", service.getName(), "--port=" + port, "--name=" + service.getName(),
+                            "--type=LoadBalancer", "-n", currentNamespace)
+                    .runAndWait();
         } catch (Exception e) {
             fail("Service failed to be exposed. Caused by " + e.getMessage());
         }
@@ -124,7 +126,8 @@ public final class KubectlClient {
      */
     public void scaleTo(Service service, int replicas) {
         try {
-            new Command(KUBECTL, "scale", "deployment/" + service.getName(), "--replicas=" + replicas, "-n", currentNamespace)
+            kubectlCommand()
+                    .arguments("scale", "deployment/" + service.getName(), "--replicas=" + replicas, "-n", currentNamespace)
                     .runAndWait();
         } catch (Exception e) {
             fail("Service failed to be scaled. Caused by " + e.getMessage());
@@ -222,12 +225,16 @@ public final class KubectlClient {
      */
     public void deleteNamespace() {
         try {
-            new Command(KUBECTL, "delete", "namespace", currentNamespace).runAndWait();
+            kubectlCommand().arguments("delete", "namespace", currentNamespace).runAndWait();
         } catch (Exception e) {
             fail("Project failed to be deleted. Caused by " + e.getMessage());
         } finally {
             masterClient.close();
         }
+    }
+
+    private Command kubectlCommand() {
+        return new Command(KUBECTL).lockAccess();
     }
 
     private boolean isPodRunning(Pod pod) {
@@ -353,7 +360,7 @@ public final class KubectlClient {
     private boolean doCreateNamespace(String namespaceName) {
         boolean created = false;
         try {
-            new Command(KUBECTL, "create", "namespace", namespaceName).runAndWait();
+            kubectlCommand().arguments("create", "namespace", namespaceName).runAndWait();
             created = true;
         } catch (Exception e) {
             Log.warn("Namespace " + namespaceName + " failed to be created. Caused by: " + e.getMessage() + ". Trying again.");
@@ -370,7 +377,7 @@ public final class KubectlClient {
 
     private void printServiceInfo(Service service) {
         try {
-            new Command(KUBECTL, "get", "svc", service.getName(), "-n", currentNamespace)
+            kubectlCommand().arguments("get", "svc", service.getName(), "-n", currentNamespace)
                     .outputToConsole()
                     .runAndWait();
         } catch (Exception ignored) {

@@ -48,7 +48,7 @@ public final class DockerUtils {
 
     private static void buildService(ServiceContext service, Path dockerFile) {
         try {
-            new Command(DOCKER, "build", "-f", dockerFile.toString(), "-t", getUniqueName(service), ".").runAndWait();
+            new Command(DOCKER).arguments("build", "-f", dockerFile.toString(), "-t", getUniqueName(service), ".").runAndWait();
         } catch (Exception e) {
             fail("Failed to build image " + service.getServiceFolder().toAbsolutePath().toString() + " . Caused by "
                     + e.getMessage());
@@ -59,8 +59,8 @@ public final class DockerUtils {
         String containerRegistryUrl = System.getProperty(CONTAINER_REGISTY_URL_PROPERTY);
         try {
             String targetImage = containerRegistryUrl + "/" + getUniqueName(service);
-            new Command(DOCKER, "tag", getUniqueName(service), targetImage).runAndWait();
-            new Command(DOCKER, "push", targetImage).runAndWait();
+            new Command(DOCKER).arguments("tag", getUniqueName(service), targetImage).runAndWait();
+            new Command(DOCKER).arguments("push", targetImage).runAndWait();
             return targetImage;
         } catch (Exception e) {
             fail("Failed to push image " + service.getOwner().getName() + " into " + containerRegistryUrl + ". Caused by "
