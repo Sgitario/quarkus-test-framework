@@ -12,7 +12,7 @@ public class GreetingResource {
 
     public static final String PROPERTY = "custom.property.name";
 
-    @ConfigProperty(name = PROPERTY)
+    @ConfigProperty(name = PROPERTY, defaultValue = "victor")
     String name;
 
     @GET
