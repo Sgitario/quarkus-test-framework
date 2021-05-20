@@ -14,6 +14,8 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.LogManager;
 
 import javax.inject.Inject;
@@ -35,6 +37,7 @@ public class QuarkusScenarioBootstrap
 
     private final ServiceLoader<AnnotationBinding> bindingsRegistry = ServiceLoader.load(AnnotationBinding.class);
     private final ServiceLoader<ExtensionBootstrap> extensionsRegistry = ServiceLoader.load(ExtensionBootstrap.class);
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private List<Service> services = new ArrayList<>();
 
@@ -67,6 +70,7 @@ public class QuarkusScenarioBootstrap
     @Override
     public void afterAll(ExtensionContext context) {
         try {
+            executorService.shutdown();
             List<Service> servicesToStop = new ArrayList<>(services);
             Collections.reverse(servicesToStop);
             servicesToStop.forEach(Service::stop);
@@ -111,7 +115,6 @@ public class QuarkusScenarioBootstrap
     }
 
     private void notifyExtensionsOnError(ExtensionContext context, Throwable throwable) {
-        throwable.printStackTrace();
         extensions.forEach(ext -> ext.onError(context, throwable));
     }
 
@@ -145,7 +148,7 @@ public class QuarkusScenarioBootstrap
         Service service = (Service) field.get(null);
         service.validate(field);
         service.register(field.getName());
-        ServiceContext serviceContext = new ServiceContext(service, context);
+        ServiceContext serviceContext = new ServiceContext(service, context, executorService);
         extensions.forEach(ext -> ext.updateServiceContext(serviceContext));
 
         service.init(resource, serviceContext);

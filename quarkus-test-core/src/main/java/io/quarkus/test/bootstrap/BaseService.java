@@ -166,7 +166,7 @@ public class BaseService<T extends Service> implements Service {
 
     @Override
     public LogsVerifier logs() {
-        return new LogsVerifier(this);
+        return new LogsVerifier(context);
     }
 
     protected <U> U getPropertyFromContext(String key) {

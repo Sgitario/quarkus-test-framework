@@ -35,5 +35,10 @@
             <artifactId>shrinkwrap-depchain</artifactId>
             <type>pom</type>
         </dependency>
+        <dependency>
+            <groupId>net.jodah</groupId>
+            <artifactId>concurrentunit</artifactId>
+            <version>0.4.6</version>
+        </dependency>
     </dependencies>
 </project>

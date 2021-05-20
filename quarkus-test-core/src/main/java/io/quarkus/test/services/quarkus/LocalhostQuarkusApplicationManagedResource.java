@@ -2,6 +2,7 @@ package io.quarkus.test.services.quarkus;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,13 +41,16 @@ public abstract class LocalhostQuarkusApplicationManagedResource extends Quarkus
         }
 
         try {
+            File outputFile = model.getContext().getServiceFolder().resolve("out.log").toFile();
             assignPorts();
             process = new ProcessBuilder(prepareCommand(getPropertiesForCommand()))
                     .redirectErrorStream(true)
+                    .redirectOutput(outputFile)
+                    .redirectInput(ProcessBuilder.Redirect.INHERIT)
                     .directory(model.getContext().getServiceFolder().toFile())
                     .start();
 
-            loggingHandler = new FileQuarkusApplicationLoggingHandler(model.getContext(), "out.log", process.getInputStream());
+            loggingHandler = new FileQuarkusApplicationLoggingHandler(model.getContext(), outputFile);
             loggingHandler.startWatching();
 
         } catch (Exception e) {

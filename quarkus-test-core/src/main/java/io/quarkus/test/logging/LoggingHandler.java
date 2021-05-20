@@ -14,7 +14,6 @@ public abstract class LoggingHandler {
     private static final long TIMEOUT_IN_MILLIS = 4000;
 
     private final ServiceContext context;
-    private Thread innerThread;
     private List<String> logs = new CopyOnWriteArrayList<>();
     private boolean running = false;
 
@@ -27,21 +26,12 @@ public abstract class LoggingHandler {
     public void startWatching() {
         logs.clear();
         running = true;
-        innerThread = new Thread(this::run);
-        innerThread.setDaemon(true);
-        innerThread.start();
+        context.getExecutorService().submit(this::run);
     }
 
     public void stopWatching() {
         running = false;
         logs.clear();
-        if (innerThread != null) {
-            try {
-                innerThread.interrupt();
-            } catch (Exception ignored) {
-
-            }
-        }
     }
 
     public List<String> logs() {
@@ -80,10 +70,6 @@ public abstract class LoggingHandler {
         } else {
             onLines(newLines);
         }
-    }
-
-    protected String contextName() {
-        return context.getName();
     }
 
     private boolean isLogEnabled() {
