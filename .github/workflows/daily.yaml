@@ -35,13 +35,65 @@ jobs:
         with:
           name: maven-repo
           path: maven-repo.tgz
-  build-jvm:
-    name: Daily build - JVM
+  build-jvm-latest:
+    name: Daily build - JVM - latest Quarkus
     runs-on: ubuntu-latest
     needs: quarkus-main-build
     strategy:
       matrix:
-        quarkus-version: ["1.13.6.Final", "2.0.0.CR3", "999-SNAPSHOT"]
+        quarkus-version: ["999-SNAPSHOT"]
+        java: [ 11 ]
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Reclaim Disk Space
+        run: .github/ci-prerequisites.sh
+      - name: Install JDK {{ matrix.java }}
+        uses: joschi/setup-jdk@e87a7cec853d2dd7066adf837fe12bf0f3d45e52
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Download Maven Repo
+        uses: actions/download-artifact@v1
+        with:
+          name: maven-repo
+          path: .
+      - name: Extract Maven Repo
+        shell: bash
+        run: tar -xzf maven-repo.tgz -C ~
+      - name: Build
+        run: |
+          mvn -s .github/mvn-settings.xml clean install -Pframework,examples,coverage -Dvalidate-format -Dquarkus.platform.version="${{ matrix.quarkus-version }}"
+      - name: Generate Jacoco Report
+        run: |
+          cd coverage-report
+          mvn package
+      - name: Generate Jacoco Badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          generate-branches-badge: true
+          jacoco-csv-file: coverage-report/target/site/jacoco/jacoco.csv
+      - name: Zip Artifacts
+        if: failure()
+        run: |
+          zip -R artifacts-jvm-latest-${{ matrix.java }}.zip '*-reports/*'
+      - name: Archive artifacts
+        if: failure()
+        uses: actions/upload-artifact@v1
+        with:
+          name: ci-artifacts
+          path: artifacts-jvm-latest-${{ matrix.java }}.zip
+  build-jvm-released:
+    name: Daily build - JVM - released Quarkus
+    runs-on: ubuntu-latest
+    needs: quarkus-main-build
+    strategy:
+      matrix:
+        quarkus-version: ["1.13.6.Final", "2.0.0.CR3"]
         java: [ 11 ]
     steps:
       - uses: actions/checkout@v1
@@ -69,13 +121,15 @@ jobs:
         run: |
           mvn -s .github/mvn-settings.xml clean install -Pframework,examples -Dvalidate-format -Dquarkus.platform.version="${{ matrix.quarkus-version }}"
       - name: Zip Artifacts
+        if: failure()
         run: |
-          zip -R artifacts-jvm${{ matrix.java }}.zip '*-reports/*'
+          zip -R artifacts-jvm-${{ matrix.quarkus-version }}-${{ matrix.java }}.zip '*-reports/*'
       - name: Archive artifacts
+        if: failure()
         uses: actions/upload-artifact@v1
         with:
           name: ci-artifacts
-          path: artifacts-jvm${{ matrix.java }}.zip
+          path: artifacts-jvm-${{ matrix.quarkus-version }}-${{ matrix.java }}.zip
   build-native:
     name: Daily build - Native
     runs-on: ubuntu-latest
@@ -110,13 +164,15 @@ jobs:
         run: |
           mvn -s .github/mvn-settings.xml clean install -Pframework,examples,native -Dquarkus.platform.version="${{ matrix.quarkus-version }}"
       - name: Zip Artifacts
+        if: failure()
         run: |
-          zip -R artifacts-native${{ matrix.java }}.zip '*-reports/*'
+          zip -R artifacts-native-${{ matrix.quarkus-version }}-${{ matrix.java }}.zip '*-reports/*'
       - name: Archive artifacts
+        if: failure()
         uses: actions/upload-artifact@v1
         with:
           name: ci-artifacts
-          path: artifacts-native${{ matrix.java }}.zip
+          path: artifacts-native-${{ matrix.quarkus-version }}-${{ matrix.java }}.zip
   build-jvm-kubernetes:
     name: Daily build - JVM - Kubernetes
     runs-on: ubuntu-latest
@@ -162,13 +218,13 @@ jobs:
       - name: Zip Artifacts
         if: failure()
         run: |
-          zip -R artifacts-k8s-jvm${{ matrix.java }}.zip '*-reports/*'
+          zip -R artifacts-k8s-jvm-${{ matrix.quarkus-version }}-${{ matrix.java }}.zip '*-reports/*'
       - name: Archive artifacts
         if: failure()
         uses: actions/upload-artifact@v1
         with:
           name: ci-artifacts
-          path: artifacts-k8s-jvm${{ matrix.java }}.zip
+          path: artifacts-k8s-jvm-${{ matrix.java }}.zip
   build-native-kubernetes:
     name: Daily build - Native - Kubernetes
     runs-on: ubuntu-latest
@@ -212,10 +268,12 @@ jobs:
         run: |
           mvn -s .github/mvn-settings.xml clean install -Pframework,examples,kubernetes,native -Dts.container.registry-url=${{ secrets.CI_REGISTRY }} -Dquarkus.platform.version="${{ matrix.quarkus-version }}"
       - name: Zip Artifacts
+        if: failure()
         run: |
-          zip -R artifacts-k8s-native${{ matrix.java }}.zip '*-reports/*'
+          zip -R artifacts-k8s-native-${{ matrix.quarkus-version }}-${{ matrix.java }}.zip '*-reports/*'
       - name: Archive artifacts
+        if: failure()
         uses: actions/upload-artifact@v1
         with:
           name: ci-artifacts
-          path: artifacts-k8s-native${{ matrix.java }}.zip
+          path: artifacts-k8s-native-${{ matrix.quarkus-version }}-${{ matrix.java }}.zip
