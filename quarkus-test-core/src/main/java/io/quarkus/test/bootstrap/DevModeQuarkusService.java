@@ -145,12 +145,4 @@ public class DevModeQuarkusService extends RestService {
         webClient.getOptions().setRedirectEnabled(true);
         return webClient;
     }
-
-    private static void sleep(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ignored) {
-
-        }
-    }
 }

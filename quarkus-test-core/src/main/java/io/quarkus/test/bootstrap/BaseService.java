@@ -197,6 +197,16 @@ public class BaseService<T extends Service> implements Service {
         return new LogsVerifier(this);
     }
 
+    /**
+     * Bound the current instance to an existing service.
+     */
+    protected void bind(BaseService<?> service) {
+        this.serviceName = service.serviceName;
+        this.configuration = service.configuration;
+        this.context = service.context;
+        this.managedResource = service.managedResource;
+    }
+
     protected Path getServiceFolder() {
         return context.getServiceFolder();
     }

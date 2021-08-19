@@ -16,6 +16,16 @@ public final class ReflectionUtils {
 
     }
 
+    public static <T> T createInstance(Class<T> clazz) {
+        try {
+            return clazz.getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+            fail("No public constructor found with no arguments in " + clazz.getName());
+        }
+
+        return null;
+    }
+
     public static <T> T getStaticFieldValue(Field field) {
         try {
             field.setAccessible(true);
