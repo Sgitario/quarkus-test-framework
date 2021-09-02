@@ -23,7 +23,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 import io.quarkus.test.services.DevModeQuarkusApplication;
 
-public class DevModeQuarkusService extends RestService {
+public class DevModeQuarkusService extends RemoteDevModeQuarkusService {
     public static final String DEV_UI_PATH = "/q/dev";
 
     private static final int JAVASCRIPT_WAIT_TIMEOUT_MILLIS = 10000;
@@ -144,13 +144,5 @@ public class DevModeQuarkusService extends RestService {
         webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
         webClient.getOptions().setRedirectEnabled(true);
         return webClient;
-    }
-
-    private static void sleep(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ignored) {
-
-        }
     }
 }
